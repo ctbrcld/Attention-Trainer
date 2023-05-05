@@ -1,24 +1,22 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
 public class Numbers : MonoBehaviour
 {
-    [SerializeField] TextMeshProUGUI CurrentButtonNumberText;
-    private Action<int> clickedNumber;
+    [SerializeField] private TextMeshProUGUI _currentNumberButtonText;
+    private Action<int> _clickedNumberButton;
     private int _currentButtonNumber;
 
-    public void Initialize(int CurrentButtonNumber, Action<int> numberDelegate)
+    public void Initialize(int CurrentNumberButton, Action<int> numberButtonDelegate)
     {
-        clickedNumber = numberDelegate;
-        _currentButtonNumber = CurrentButtonNumber;
-        CurrentButtonNumberText.text = CurrentButtonNumber.ToString();
+        _clickedNumberButton = numberButtonDelegate;
+        _currentButtonNumber = CurrentNumberButton;
+        _currentNumberButtonText.text = CurrentNumberButton.ToString();
     }
     public void OnClick()
     {
-        clickedNumber(_currentButtonNumber);
+        _clickedNumberButton(_currentButtonNumber);
         Destroy(gameObject);
     }
 }
