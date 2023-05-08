@@ -4,11 +4,12 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _timeBarText;
-    [SerializeField] private TextMeshProUGUI _setTimeText;
+    [SerializeField] private TextMeshProUGUI _setTimerText;
     [SerializeField] private TextMeshProUGUI _setAmountText;
     [SerializeField] private TextMeshProUGUI _startButtonText;
+    [SerializeField] private TextMeshProUGUI _winResultText;
     [SerializeField] private Slider _timeBarSlider;
-    [SerializeField] private Slider _setTimeSlider;
+    [SerializeField] private Slider _setTimerSlider;
     [SerializeField] private Slider _setAmountSlider;
     [SerializeField] private Numbers _numberButtonPrefab;
     [SerializeField] private Button _startButton;
@@ -16,10 +17,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject _loseSplashScreen;
     [SerializeField] private RectTransform _gameField;
 
-    private int _expectedButton = 1;
-    private int _amount;
+    private int _expectedNumber;
+    private int _amountOfNumbers;
     private float _timer;
-    private float _setTime;
+    private float _setTimer;
     private float _maxX;
     private float _maxY;
     private bool _stopTimer;
@@ -27,42 +28,37 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        ChangeParameters();
+    }
+
+    public void ChangeParameters()
+    {
         _stopTimer = true;
+        _setTimerSlider.interactable = true;
+        _setAmountSlider.interactable = true;
+        _startButton.interactable = true;
         _timeBarSlider.interactable = false;
-        _timer = _setTimeSlider.value;
-        _amount = (int)_setAmountSlider.value;
-        _setAmountText.text = "Amount of numbers: " + _amount;
-        _setTimeText.text = "Game time: " + _setTimeSlider.value.ToString() + " sec";
-    }
-
-    public void AmountChange()
-    {
-        _amount = (int)_setAmountSlider.value;
-        _setAmountText.text = "Amount of numbers: " + _amount;
-    }
-
-    public void GameTimeChange()
-    {
-        _timer = _setTimeSlider.value;
-        _setTimeText.text = "Game time: " + _setTimeSlider.value.ToString() + " sec";
         _timeBarText.text = "Set parameters below";
+        _amountOfNumbers = (int)_setAmountSlider.value;
+        _setAmountText.text = "Amount of numbers: " + _amountOfNumbers;
+        _timer = _setTimerSlider.value;
+        _setTimerText.text = "Game time: " + _setTimerSlider.value.ToString() + " sec";
     }
 
     public void StartGame()
     {
-        _setTime = _setTimeSlider.value;
-        _expectedButton = 1;
         _stopTimer = false;
+        _setTimer = _setTimerSlider.value;
         _winSplashScreen.SetActive(false);
         _loseSplashScreen.SetActive(false);
-        _startButton.interactable = false;
-        _setTimeSlider.interactable = false;
         _setAmountSlider.interactable = false;
-        _timeBarText.text = "Time left: " + _setTimeSlider.value;
+        _setTimerSlider.interactable = false;
+        _timeBarText.text = "Time left: " + _setTimerSlider.value;
+        _startButton.interactable = false;
         _startButtonText.text = "Hurry up!";
-        var counter = 1;
+        _expectedNumber = 1;
 
-        while (counter <= _amount)
+        for (int i = 1; i <= _amountOfNumbers; i++)
         {
             var rect = _gameField.rect;
             _maxX = rect.size.x;
@@ -71,32 +67,26 @@ public class GameManager : MonoBehaviour
             float randomY = Random.Range(MinSizeBorder, _maxY - MinSizeBorder);
             var spawnedButton = Instantiate(_numberButtonPrefab, _gameField);
             spawnedButton.transform.localPosition = new Vector2(randomX, randomY);
-            spawnedButton.Initialize(counter, ButtonClicked);
-            counter++;
+            spawnedButton.Initialize(i, ClickedNumber);
         }
     }
 
     private void StopGame()
     {
-        AmountChange();
-        GameTimeChange();
+        ChangeParameters();
         DestroyAllNumbers();
-        _stopTimer = true;
-        _timeBarText.text = "Set parameters below";
-        _setTimeSlider.interactable = true;
-        _setAmountSlider.interactable = true;
         _startButtonText.text = "Restart";
-        _startButton.interactable = true;
     }
 
-    private void ButtonClicked(int number)
+    private void ClickedNumber(int clickedNumber)
     {
-        if (number != _expectedButton)
+        if (clickedNumber != _expectedNumber)
         {
             Lose();
         }
-        ++_expectedButton;
-        if (_expectedButton == _amount + 1)
+
+        ++_expectedNumber;
+        if (_expectedNumber == _amountOfNumbers + 1)
         {
             Win();
         }
@@ -105,6 +95,7 @@ public class GameManager : MonoBehaviour
     private void Win()
     {
         _winSplashScreen.SetActive(true);
+        _winResultText.text = (_setTimer - _timer).ToString("you did it in " + ("0.00") + " seconds");
         StopGame();
     }
 
@@ -125,15 +116,14 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-
         if (!_stopTimer)
         {
             _timer -= Time.deltaTime;
-            float minutes = Mathf.FloorToInt(_timer / 60);
-            float seconds = Mathf.FloorToInt(_timer - minutes * 60);
-            string timeLeftText = string.Format("{0:0}:{1:00}", minutes, seconds);
+            float seconds = Mathf.FloorToInt(_timer);
+            float fraction = Mathf.FloorToInt((_timer - seconds) * 100);
+            string timeLeftText = string.Format("{0:00}:{1:00}", seconds, fraction);
             _timeBarText.text = timeLeftText;
-            _timeBarSlider.value = _timer / _setTime;
+            _timeBarSlider.value = _timer / _setTimer;
         }
 
         if (_timer < 0)
