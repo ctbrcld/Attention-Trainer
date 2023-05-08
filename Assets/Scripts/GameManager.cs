@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,30 +32,31 @@ public class GameManager : MonoBehaviour
         ChangeParameters();
     }
 
+    private void InteractiveState(bool state)
+    {
+        _setTimerSlider.interactable = state;
+        _setAmountSlider.interactable = state;
+        _startButton.interactable = state;
+        _stopTimer = state;
+    }
+
     public void ChangeParameters()
     {
-        _stopTimer = true;
-        _setTimerSlider.interactable = true;
-        _setAmountSlider.interactable = true;
-        _startButton.interactable = true;
-        _timeBarSlider.interactable = false;
+        InteractiveState(true);
         _timeBarText.text = "Set parameters below";
         _amountOfNumbers = (int)_setAmountSlider.value;
-        _setAmountText.text = "Amount of numbers: " + _amountOfNumbers;
+        _setAmountText.text = $"Amount of numbers: {_amountOfNumbers}";
         _timer = _setTimerSlider.value;
-        _setTimerText.text = "Game time: " + _setTimerSlider.value.ToString() + " sec";
+        _setTimerText.text = $"Game time: {_timer} sec";
     }
 
     public void StartGame()
     {
-        _stopTimer = false;
-        _setTimer = _setTimerSlider.value;
+        InteractiveState(false);
         _winSplashScreen.SetActive(false);
         _loseSplashScreen.SetActive(false);
-        _setAmountSlider.interactable = false;
-        _setTimerSlider.interactable = false;
+        _setTimer = _setTimerSlider.value;
         _timeBarText.text = "Time left: " + _setTimerSlider.value;
-        _startButton.interactable = false;
         _startButtonText.text = "Hurry up!";
         _expectedNumber = 1;
 
@@ -85,7 +87,7 @@ public class GameManager : MonoBehaviour
             Lose();
         }
 
-        ++_expectedNumber;
+        _expectedNumber++;
         if (_expectedNumber == _amountOfNumbers + 1)
         {
             Win();
@@ -95,7 +97,7 @@ public class GameManager : MonoBehaviour
     private void Win()
     {
         _winSplashScreen.SetActive(true);
-        _winResultText.text = (_setTimer - _timer).ToString("you did it in " + ("0.00") + " seconds");
+        _winResultText.text = "you did it in " + (_setTimer - _timer).ToString("0.00") + " seconds";
         StopGame();
     }
 
@@ -107,10 +109,9 @@ public class GameManager : MonoBehaviour
 
     public void DestroyAllNumbers()
     {
-        GameObject[] numbers = GameObject.FindGameObjectsWithTag("Button");
-        for (int i = 0; i < numbers.Length; i++)
+        foreach (GameObject number in GameObject.FindGameObjectsWithTag("Button"))
         {
-            Destroy(numbers[i]);
+            Destroy(number);
         }
     }
 
@@ -119,10 +120,7 @@ public class GameManager : MonoBehaviour
         if (!_stopTimer)
         {
             _timer -= Time.deltaTime;
-            float seconds = Mathf.FloorToInt(_timer);
-            float fraction = Mathf.FloorToInt((_timer - seconds) * 100);
-            string timeLeftText = string.Format("{0:00}:{1:00}", seconds, fraction);
-            _timeBarText.text = timeLeftText;
+            _timeBarText.text = _timer.ToString("F2");
             _timeBarSlider.value = _timer / _setTimer;
         }
 
@@ -130,5 +128,6 @@ public class GameManager : MonoBehaviour
         {
             Lose();
         }
+
     }
 }
